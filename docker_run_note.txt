@@ -1,0 +1,5 @@
+docker run -d -p 5901:5901 herondev:X.XX.X
+
+default vnc password is vncpassword
+
+connect using 5901
