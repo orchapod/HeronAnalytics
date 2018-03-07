@@ -77,3 +77,7 @@ RUN curl -LO http://github.com/twitter/heron/releases/download/0.17.5/heron-inst
 RUN chmod +x heron-install-0.17.5-centos.sh
 RUN ./heron-install-0.17.5-centos.sh
 ENV PATH="$PATH:$HOME/bin"
+
+# Create a directory that is to be mounted by the host
+RUN mkdir -p /home/working_dir/mount
+ADD . /home/working_dir/mount

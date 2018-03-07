@@ -1,4 +1,4 @@
-docker run -d -p 5901:5901 herondev:X.XX.X
+docker run -v <path_on_your_host>:/home/working_dir/mount -d -p 5901:5901 herondev:X.XX.X
 
 default vnc password is vncpassword
 
