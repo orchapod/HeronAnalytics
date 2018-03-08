@@ -1,0 +1,17 @@
+Two ways to do this: You may use run_me.sh or you can do this manually.
+
+To start the container manually, follow instructions below:
+
+You must specify three paths to docker so docker will mount three directories.
+
+<path_on_your_host> is your eclipse workspace. Mount this, then when you start up eclipse on the container, tell eclipse to use /home/working_dir/mount as eclipes workspace.
+
+<path_to_m2_on_your_host> is your Maven repo.
+
+<path_to_eclipse_on_your_host> is your Eclipse config directory.
+
+docker run -v <path_on_your_host>:/home/working_dir/mount -v <path_to_m2_on_your_host>:~/.m2 -v <path_to_eclipse_on_your_host>:~/.eclipse -d -p 5901:5901 herondev:X.XX.X
+
+default vnc password is vncpassword
+
+connect using 5901

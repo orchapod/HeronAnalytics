@@ -1,27 +1,14 @@
-# This Dockerfile is used to build an headles vnc image based on Centos 
-FROM consol/centos-xfce-vnc 
+FROM centos:7
 
 # Dockerfile author / maintainer 
-MAINTAINER mjschmidt mjschmidt 
-# Additional author: Thomas Ansill
-
-# Switch user if it somehow switched to something else
-USER root
-RUN mkdir -p /home/working_dir
-WORKDIR /home/working_dir
-
-# RDP stuff
-RUN yum -y install xrdp
-# RUN systemctl enable xrdp.service probably does not work
-# RUN systemctl start xrdp.service
-
-# This is passed to the heron build command via the --config flag
-ENV TARGET_PLATFORM centos
+MAINTAINER tbansil tbansil
 
 # Install basic stuff
+RUN yum install -y epel-release
 RUN yum -y upgrade
 RUN yum -y update
 RUN yum -y install \
+	bzip2 \
       curl \
       cmake \
       openssl-devel \
@@ -29,6 +16,7 @@ RUN yum -y install \
       gcc \
       gcc-c++ \
       git \
+      gedit \
       kernel-devel \
       libtool \
       make \
@@ -39,8 +27,59 @@ RUN yum -y install \
       zip \
       unzip \
       vim \
+	net-tools2 \
+	sudo \
       wget \
       which
+
+# Install TigerVNC
+RUN yum -y install tigervnc-server
+RUN yum clean all
+
+# Install XFCE4
+RUN yum -y -x gnome-keyring --skip-broken groupinstall "Xfce" "X Window System" "Desktop"
+RUN yum -y groupinstall "Fonts"
+RUN yum erase -y *power* *screensaver*
+RUN rm /etc/xdg/autostart/xfce-polkit*
+RUN /bin/dbus-uuidgen > /etc/machine-id
+ADD ./xfce/ /root/
+
+# VNC port
+EXPOSE 5901 
+
+# Init folder
+RUN mkdir -p /init
+ADD ./start_up_scripts/ /init/
+RUN chmod a+x /init/*
+RUN /init/set_user_permission.sh /init $HOME
+
+# LibNSS wrapper
+RUN yum -y install nss_wrapper gettext
+RUN echo 'source /init/generate_container_user' >> $HOME/.bashrc
+
+# Set VNC password and other settings
+ENV	VNC_PASSWORD=vncpassword \
+	VNC_RESOLUTION=1280x1024 \
+	VNC_COL_DEPTH=24 \
+	DISPLAY=:1 \
+	TERM=xterm
+
+# Set the entrypoint in docker startup
+ENTRYPOINT ["/init/vnc_startup.sh"]
+CMD ["--tail-log"]
+
+# Create working dir
+RUN mkdir -p /home/working_dir
+WORKDIR /home/working_dir
+
+# RDP stuff
+# RUN yum -y install xrdp
+# RUN systemctl enable xrdp.service probably does not work
+# RUN systemctl start xrdp.service
+
+# This is passed to the heron build command via the --config flag
+ENV TARGET_PLATFORM centos
+
 
 # Install java 8 JDK
 RUN yum -y install java-1.8.0-openjdk java-1.8.0-openjdk-devel
@@ -75,9 +114,21 @@ RUN curl -LO http://github.com/twitter/heron/releases/download/0.17.5/heron-inst
 
 # Run the heron install script
 RUN chmod +x heron-install-0.17.5-centos.sh
-RUN ./heron-install-0.17.5-centos.sh
-ENV PATH="$PATH:$HOME/bin"
+RUN ./heron-install-0.17.5-centos.sh --user
+ENV PATH="$PATH:/root/bin"
+
+# Remove heron stuff that we don't need (heron is already installed somewhere else)
+RUN rm -rf heron
+RUN rm -rf heron-install-0.17.5-centos.sh
 
 # Create a directory that is to be mounted by the host
 RUN mkdir -p /home/working_dir/mount
 ADD . /home/working_dir/mount
+
+# Hook up .m2 in container with vm
+RUN mkdir -p /root/.m2
+ADD . /root/.m2
+
+# Hook up .eclipse in container with vm
+RUN mkdir -p /root/.eclipse
+ADD . /root/.eclipse
