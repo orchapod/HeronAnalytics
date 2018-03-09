@@ -123,12 +123,14 @@ RUN rm -rf heron-install-0.17.5-centos.sh
 
 # Create a directory that is to be mounted by the host
 RUN mkdir -p /home/working_dir/mount
-ADD . /home/working_dir/mount
 
 # Hook up .m2 in container with vm
 RUN mkdir -p /root/.m2
-ADD . /root/.m2
 
 # Hook up .eclipse in container with vm
 RUN mkdir -p /root/.eclipse
-ADD . /root/.eclipse
+
+# Add README.md
+ADD README.md /root/
+RUN mkdir -p /root/Desktop/
+ADD README.md /root/Desktop/
