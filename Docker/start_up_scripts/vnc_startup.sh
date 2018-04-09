@@ -16,6 +16,9 @@ echo
 echo "starting server"
 vncserver $DISPLAY -depth $VNC_COL_DEPTH -geometry $VNC_RESOLUTION
 
+nohup heron-tracker > /var/log/heron-tracker.log 2>$1 &
+nohup heron-ui > /var/log/heron-ui.log 2>$1 &
+
 echo "Last return 1 status:"
 echo $? 
 
